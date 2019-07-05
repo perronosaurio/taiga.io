@@ -5,6 +5,6 @@
 
   `npm install`, `npm start`
 
-  <a href="http://taigaio.github.io/taiga-doc/dist/webhooks.html">Read the taiga.io documentation</a>
+  <a href="http://taigaio.github.io/taiga-doc/dist/webhooks.html">Read the taiga.io documentation,</a>
   <a href="http://discord.gg/7vx3S4H">Get support in our discord server</a>
 </div>
