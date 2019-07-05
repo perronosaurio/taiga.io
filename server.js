@@ -6,7 +6,7 @@ const { WebhookClient } = require('discord.js')
 express()
   .use(express.static('public'))
   .use(bodyParser.json())
-  .get('/', (request, response) => response.sendStatus(200))
+  .get('/webhook', (request, response) => response.sendStatus(200))
   .post('/webhook', async (request, response) => {
     if (request.body) {
       const discordWebhook = new WebhookClient(process.env.WEBHOOKID, process.env.WEBHOOKTOKEN)
@@ -152,4 +152,4 @@ express()
       response.status(404).send('Something went wrong!')
     }
   })
-  .listen(process.env.PORT, () => console.log('Webhook ready!'))
+  .listen(process.env.PORT, () => console.log(`Webhook listening on port ${process.env.PORT}!`))
