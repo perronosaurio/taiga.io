@@ -1,0 +1,19 @@
+{
+  "name": "taiga.io",
+  "description": "A simple Webhook built on Express for taiga.io",
+  "version": "0.0.1",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.4",
+    "discord.js": "^11.5.1",
+    "body-parser": "^1.19.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "standard": "^12.0.1",
+    "dotenv": "^7.0.0"
+  }
+}
