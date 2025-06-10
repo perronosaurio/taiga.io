@@ -8,6 +8,21 @@ const handleIssueEvent = (body) => {
   const changer = body.by
   const sprint = issue.milestone
 
+  let statusField
+  if (body.action === 'change' && body.change?.diff?.status) {
+    statusField = {
+      name: '📊 Status',
+      value: `${body.change.diff.status.from} → ${body.change.diff.status.to}`,
+      inline: true
+    }
+  } else {
+    statusField = {
+      name: '📊 Status',
+      value: issue.status.name,
+      inline: true
+    }
+  }
+
   switch (body.action) {
     case 'create':
       title = `🐛 Created Issue #${issue.ref}: ${issue.subject}`
@@ -59,11 +74,7 @@ const handleIssueEvent = (body) => {
         value: `[${issue.project.name}](${issue.project.permalink})`,
         inline: true
       },
-      {
-        name: '📊 Status',
-        value: issue.status.name,
-        inline: true
-      },
+      statusField,
       {
         name: '⚠️ Type',
         value: issue.type.name,

@@ -8,6 +8,21 @@ const handleUserStoryEvent = (body) => {
   const changer = body.by
   const sprint = userStory.milestone
 
+  let statusField
+  if (body.action === 'change' && body.change?.diff?.status) {
+    statusField = {
+      name: '📊 Status',
+      value: `${body.change.diff.status.from} → ${body.change.diff.status.to}`,
+      inline: true
+    }
+  } else {
+    statusField = {
+      name: '📊 Status',
+      value: userStory.status.name,
+      inline: true
+    }
+  }
+
   switch (body.action) {
     case 'create':
       title = `📝 Created User Story #${userStory.ref}: ${userStory.subject}`
@@ -59,11 +74,7 @@ const handleUserStoryEvent = (body) => {
         value: `[${userStory.project.name}](${userStory.project.permalink})`,
         inline: true
       },
-      {
-        name: '📊 Status',
-        value: userStory.status.name,
-        inline: true
-      },
+      statusField,
       ...extraFields
     ]
   }

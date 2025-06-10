@@ -8,6 +8,21 @@ const handleTaskEvent = (body) => {
   const changer = body.by
   const sprint = task.milestone // assuming milestone is used as sprint
 
+  let statusField
+  if (body.action === 'change' && body.change?.diff?.status) {
+    statusField = {
+      name: '📊 Status',
+      value: `${body.change.diff.status.from} → ${body.change.diff.status.to}`,
+      inline: true
+    }
+  } else {
+    statusField = {
+      name: '📊 Status',
+      value: task.status.name,
+      inline: true
+    }
+  }
+
   switch (body.action) {
     case 'create':
       title = `📋 Created Task #${task.ref}: ${task.subject}`
@@ -73,11 +88,7 @@ const handleTaskEvent = (body) => {
         value: `[${task.project.name}](${task.project.permalink})`,
         inline: true
       },
-      {
-        name: '📊 Status',
-        value: task.status.name,
-        inline: true
-      },
+      statusField,
       ...extraFields
     ]
   }
