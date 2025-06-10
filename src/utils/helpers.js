@@ -14,11 +14,11 @@ const formatDate = (dateString) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZoneName: 'short'
+    hour12: true
   })
 }
 
-const createBaseEmbed = (title, url, color, timestamp, by) => {
+const createBaseEmbed = (title, url, color, timestamp, changer, assignedTo, sprint) => {
   return {
     author: {
       name: title,
@@ -26,10 +26,28 @@ const createBaseEmbed = (title, url, color, timestamp, by) => {
     },
     color: color,
     timestamp: timestamp,
+    thumbnail: changer?.photo ? { url: changer.photo } : undefined,
     footer: {
-      icon_url: by?.photo || EMBED.FOOTER.ICON_URL,
-      text: by?.full_name || EMBED.FOOTER.TEXT
-    }
+      icon_url: EMBED.FOOTER.ICON_URL,
+      text: `Managed by Koders • ${formatDate(timestamp)}`
+    },
+    fields: [
+      ...(assignedTo ? [{
+        name: '👥 Assigned To',
+        value: `[${assignedTo.full_name}](${assignedTo.permalink})`,
+        inline: true
+      }] : []),
+      ...(changer ? [{
+        name: '📝 Changed By',
+        value: `[${changer.full_name}](${changer.permalink})`,
+        inline: true
+      }] : []),
+      ...(sprint ? [{
+        name: '🏃 Sprint',
+        value: sprint.name,
+        inline: true
+      }] : [])
+    ]
   }
 }
 
