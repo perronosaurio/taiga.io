@@ -1,15 +1,28 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-
+const crypto = require('crypto')
 const { WebhookClient } = require('discord.js')
+
+const verifySignature = (key, data, signature) => {
+  const hmac = crypto.createHmac('sha1', key)
+  hmac.update(data)
+  return hmac.digest('hex') === signature
+}
 
 express()
   .use(express.static('public'))
   .use(bodyParser.json())
   .get('/webhook', (request, response) => response.sendStatus(200))
   .post('/webhook', async (request, response) => {
+    const signature = request.headers['x-taiga-webhook-signature']
+    const rawBody = JSON.stringify(request.body)
+    
+    if (!verifySignature(process.env.WEBHOOK_SECRET, rawBody, signature)) {
+      return response.status(401).send('Invalid signature')
+    }
+
     if (request.body) {
-      const discordWebhook = new WebhookClient(process.env.WEBHOOKID, process.env.WEBHOOKTOKEN)
+      const discordWebhook = new WebhookClient({ url: process.env.WEBHOOK_URL })
       const body = request.body
 
       if (body.type === 'test') {
@@ -21,6 +34,69 @@ express()
             'timestamp': body.date,
             'footer': { icon_url: body.by.photo, text: body.by.full_name },
             'color': 0x5000
+          }]
+        })
+      } else if (body.type === 'milestone') {
+        const milestone = body.data
+        let title, description, color
+
+        switch (body.action) {
+          case 'create':
+            title = `Created Epic "${milestone.name}" in ${milestone.project.name}`
+            description = [
+              `**Name**: ${milestone.name}`,
+              `**Start Date**: ${milestone.estimated_start}`,
+              `**End Date**: ${milestone.estimated_finish}`,
+              `**Owner**: ${milestone.owner.full_name}`,
+              `**Status**: ${milestone.closed ? 'Closed' : 'Open'}`
+            ].join('\n')
+            color = 0x00ff00 // Green
+            break
+
+          case 'delete':
+            title = `Deleted Epic "${milestone.name}" from ${milestone.project.name}`
+            description = [
+              `**Name**: ${milestone.name}`,
+              `**Start Date**: ${milestone.estimated_start}`,
+              `**End Date**: ${milestone.estimated_finish}`,
+              `**Owner**: ${milestone.owner.full_name}`
+            ].join('\n')
+            color = 0xff0000 // Red
+            break
+
+          case 'change':
+            title = `Updated Epic "${milestone.name}" in ${milestone.project.name}`
+            description = []
+            
+            if (body.change.diff.estimated_start) {
+              description.push(`**Start Date**: ${body.change.diff.estimated_start.from} → ${body.change.diff.estimated_start.to}`)
+            }
+            if (body.change.diff.estimated_finish) {
+              description.push(`**End Date**: ${body.change.diff.estimated_finish.from} → ${body.change.diff.estimated_finish.to}`)
+            }
+            if (body.change.diff.name) {
+              description.push(`**Name**: ${body.change.diff.name.from} → ${body.change.diff.name.to}`)
+            }
+            if (body.change.diff.closed) {
+              description.push(`**Status**: ${body.change.diff.closed.from ? 'Closed' : 'Open'} → ${body.change.diff.closed.to ? 'Closed' : 'Open'}`)
+            }
+            
+            color = 0xffff00 // Yellow
+            break
+        }
+
+        await discordWebhook.send({
+          username: 'Taiga',
+          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+          embeds: [{
+            'author': {
+              name: title,
+              url: milestone.permalink
+            },
+            'description': description,
+            'timestamp': body.date,
+            'footer': { icon_url: body.by.photo, text: body.by.full_name },
+            'color': color
           }]
         })
       } else if (body.type === 'task' && body.action === 'create') {
