@@ -4,7 +4,7 @@ const { COLORS, EMBED } = require('../config/constants')
 const verifySignature = (key, rawBody, signature) => {
   const hmac = crypto.createHmac('sha1', key)
   hmac.update(rawBody)
-  return hmac.digest('hex') === signature?.trim()
+  return hmac.digest('hex') === signature
 }
 
 const formatDate = (dateString) => {
@@ -22,8 +22,7 @@ const createBaseEmbed = (title, url, color, timestamp, by) => {
   return {
     author: {
       name: title,
-      url: url,
-      icon_url: EMBED.AUTHOR.ICON_URL
+      url: url
     },
     color: color,
     timestamp: timestamp,
