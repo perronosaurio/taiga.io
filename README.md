@@ -24,7 +24,14 @@
     - Create (with points, tags, and blocking status)
     - Delete
     - Update (including changes to milestone, subject, description, status, assignment, and blocking status)
-  - Task events (existing functionality)
+  - Task events:
+    - Create (with user story, milestone, and blocking status)
+    - Delete
+    - Update (including changes to assignment, subject, description, status, blocking status, milestone, and user story)
+  - Issue events:
+    - Create (with type, priority, severity, and blocking status)
+    - Delete
+    - Update (including changes to status, type, priority, severity, assignment, blocking status, and milestone)
 
   <a href="http://taigaio.github.io/taiga-doc/dist/webhooks.html">Read the taiga.io documentation,</a>
   <a href="http://discord.gg/7vx3S4H">Get support in our discord server</a>

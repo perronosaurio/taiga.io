@@ -176,129 +176,181 @@ express()
             'color': color
           }]
         })
-      } else if (body.type === 'task' && body.action === 'create') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Created subtask #${body.data.ref} on ${body.data.project.name}`,
-              url: `${body.data.project.permalink}/task/${body.data.ref}`
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Instance**: [${body.data.user_story.subject}](https://tree.taiga.io/project/naedian-hythelia/task/${body.data.ref})`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Assigned to**: ${body.data.assigned_to ? body.data.assigned_to.username : 'Nobody'}`,
-              `**Status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'userstory' && body.action === 'create') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Created task #${body.data.ref} on ${body.data.project.name}`,
-              url: `${body.data.project.permalink}/us/${body.data.ref}`
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Assigned to**: ${body.data.assigned_to ? body.data.assigned_to.username : 'Nobody'}`,
-              `**Status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'task' && body.action === 'delete') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Deleted subtask #${body.data.ref} on ${body.data.project.name}`,
-              url: body.data.project.permalink
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Instance**: [${body.data.user_story.subject}](${body.data.project.permalink}/task/${body.data.ref})`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Old status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'userstory' && body.action === 'delete') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Deleted task #${body.data.ref} on ${body.data.project.name}`,
-              url: body.data.project.permalink
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Old status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if ((body.type === 'task' || body.type === 'userstory') && body.action === 'change') {
-        const description = [ '' ]
-        if (body.change.diff.status) description.push(`**Old status**: ${body.change.diff.status.from}`)
-        if (body.change.diff.subject) description.push(`**Old subject**: ${body.change.diff.subject.from}`)
-        if (body.change.diff.assigned_to) description.push(`**Old assigned**: ${body.change.diff.assigned_to.from ? body.change.diff.assigned_to.from : 'Nobody'}`)
-        if (body.change.diff.description_diff) description.push(`**Old description**: ${body.change.diff.description_diff.from ? body.change.diff.description_diff.from : 'Nothing'}`)
-        if (body.change.diff.assigned_users) description.push(`**Old assigned**: ${body.change.diff.assigned_users.from ? body.change.diff.assigned_users.from : 'Nobody'}`)
+      } else if (body.type === 'task') {
+        const task = body.data
+        let title, description, color
 
-        Object.keys(body.change.diff).map(d => {
-          switch (d) {
-            case 'subject':
-              description.push(`**New subject**: ${body.change.diff.subject.to}`)
-              break
-            case 'status':
-              description.push(`**New status**: ${body.change.diff.status.to}`)
-              break
-            case 'assigned_to':
-              description.push(`**New assigned**: ${body.change.diff.assigned_to.to ? body.change.diff.assigned_to.to : 'Nobody'} `)
-              break
-            case 'description_diff':
-              description.push(`**New description**: ${body.change.diff.description_diff.to ? body.change.diff.description_diff.to : 'Nothing'}`)
-              break
-            case 'assigned_users':
-              description.push(`**New assigned**: ${body.change.diff.assigned_users.to ? body.change.diff.assigned_users.to : 'Nobody'}`)
-          }
-        })
+        switch (body.action) {
+          case 'create':
+            title = `Created Task #${task.ref} in ${task.project.name}`
+            description = [
+              `**Subject**: ${task.subject}`,
+              `**Description**: ${task.description || 'No description'}`,
+              `**Status**: ${task.status.name}`,
+              `**Tags**: ${task.tags.join(', ') || 'No tags'}`,
+              task.is_blocked ? `**Blocked**: Yes\n**Blocked Note**: ${task.blocked_note}` : '',
+              `**Owner**: ${task.owner.full_name}`,
+              task.assigned_to ? `**Assigned to**: ${task.assigned_to.full_name}` : '**Assigned to**: Unassigned',
+              task.user_story ? `**User Story**: [${task.user_story.subject}](${task.user_story.permalink})` : '',
+              task.milestone ? `**Milestone**: ${task.milestone.name}` : '',
+              task.is_iocaine ? '**Iocaine**: Yes' : ''
+            ].filter(Boolean).join('\n')
+            color = 0x00ff00 // Green
+            break
 
-        if (description.length !== 0) {
-          await discordWebhook.send({
-            username: 'Taiga',
-            avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-            embeds: [{
-              'author': {
-                name: `Updated ${body.type === 'task' ? 'subtask' : 'task'} #${body.data.ref} on ${body.data.project.name}`,
-                url: `${body.data.project.permalink}/task/${body.data.ref}`
-              },
-              'description': description.join('\n'),
-              'timestamp': body.date,
-              'footer': { icon_url: body.by.photo, text: body.by.username },
-              'color': parseInt(body.data.status.color.replace('#', ''), 16)
-            }]
-          })
+          case 'delete':
+            title = `Deleted Task #${task.ref} from ${task.project.name}`
+            description = [
+              `**Subject**: ${task.subject}`,
+              `**Description**: ${task.description || 'No description'}`,
+              `**Status**: ${task.status.name}`,
+              `**Tags**: ${task.tags.join(', ') || 'No tags'}`,
+              task.user_story ? `**User Story**: [${task.user_story.subject}](${task.user_story.permalink})` : '',
+              task.milestone ? `**Milestone**: ${task.milestone.name}` : ''
+            ].filter(Boolean).join('\n')
+            color = 0xff0000 // Red
+            break
+
+          case 'change':
+            title = `Updated Task #${task.ref} in ${task.project.name}`
+            description = []
+            
+            if (body.change.diff.assigned_to) {
+              description.push(`**Assigned to**: ${body.change.diff.assigned_to.from || 'Unassigned'} → ${body.change.diff.assigned_to.to || 'Unassigned'}`)
+            }
+            if (body.change.diff.subject) {
+              description.push(`**Subject**: ${body.change.diff.subject.from} → ${body.change.diff.subject.to}`)
+            }
+            if (body.change.diff.description) {
+              description.push(`**Description**: ${body.change.diff.description.from || 'None'} → ${body.change.diff.description.to || 'None'}`)
+            }
+            if (body.change.diff.status) {
+              description.push(`**Status**: ${body.change.diff.status.from} → ${body.change.diff.status.to}`)
+            }
+            if (body.change.diff.is_blocked) {
+              description.push(`**Blocked**: ${body.change.diff.is_blocked.from ? 'Yes' : 'No'} → ${body.change.diff.is_blocked.to ? 'Yes' : 'No'}`)
+              if (body.change.diff.blocked_note) {
+                description.push(`**Blocked Note**: ${body.change.diff.blocked_note.from || 'None'} → ${body.change.diff.blocked_note.to || 'None'}`)
+              }
+            }
+            if (body.change.diff.milestone) {
+              description.push(`**Milestone**: ${body.change.diff.milestone.from || 'None'} → ${body.change.diff.milestone.to || 'None'}`)
+            }
+            if (body.change.diff.user_story) {
+              description.push(`**User Story**: ${body.change.diff.user_story.from || 'None'} → ${body.change.diff.user_story.to || 'None'}`)
+            }
+            
+            color = 0xffff00 // Yellow
+            break
         }
+
+        await discordWebhook.send({
+          username: 'Taiga',
+          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+          embeds: [{
+            'author': {
+              name: title,
+              url: task.permalink
+            },
+            'description': description,
+            'timestamp': body.date,
+            'footer': { icon_url: body.by.photo, text: body.by.full_name },
+            'color': color
+          }]
+        })
+      } else if (body.type === 'issue') {
+        const issue = body.data
+        let title, description, color
+
+        switch (body.action) {
+          case 'create':
+            title = `Created Issue #${issue.ref} in ${issue.project.name}`
+            description = [
+              `**Subject**: ${issue.subject}`,
+              `**Description**: ${issue.description || 'No description'}`,
+              `**Type**: ${issue.type.name}`,
+              `**Status**: ${issue.status.name}`,
+              `**Priority**: ${issue.priority.name}`,
+              `**Severity**: ${issue.severity.name}`,
+              `**Tags**: ${issue.tags.join(', ') || 'No tags'}`,
+              issue.is_blocked ? `**Blocked**: Yes\n**Blocked Note**: ${issue.blocked_note}` : '',
+              `**Owner**: ${issue.owner.full_name}`,
+              issue.assigned_to ? `**Assigned to**: ${issue.assigned_to.full_name}` : '**Assigned to**: Unassigned',
+              issue.milestone ? `**Milestone**: ${issue.milestone.name}` : '',
+              issue.external_reference ? `**External Reference**: ${issue.external_reference}` : ''
+            ].filter(Boolean).join('\n')
+            color = 0x00ff00 // Green
+            break
+
+          case 'delete':
+            title = `Deleted Issue #${issue.ref} from ${issue.project.name}`
+            description = [
+              `**Subject**: ${issue.subject}`,
+              `**Description**: ${issue.description || 'No description'}`,
+              `**Type**: ${issue.type.name}`,
+              `**Status**: ${issue.status.name}`,
+              `**Priority**: ${issue.priority.name}`,
+              `**Severity**: ${issue.severity.name}`,
+              `**Tags**: ${issue.tags.join(', ') || 'No tags'}`,
+              issue.milestone ? `**Milestone**: ${issue.milestone.name}` : '',
+              issue.external_reference ? `**External Reference**: ${issue.external_reference}` : ''
+            ].filter(Boolean).join('\n')
+            color = 0xff0000 // Red
+            break
+
+          case 'change':
+            title = `Updated Issue #${issue.ref} in ${issue.project.name}`
+            description = []
+            
+            if (body.change.diff.status) {
+              description.push(`**Status**: ${body.change.diff.status.from} → ${body.change.diff.status.to}`)
+            }
+            if (body.change.diff.subject) {
+              description.push(`**Subject**: ${body.change.diff.subject.from} → ${body.change.diff.subject.to}`)
+            }
+            if (body.change.diff.description) {
+              description.push(`**Description**: ${body.change.diff.description.from || 'None'} → ${body.change.diff.description.to || 'None'}`)
+            }
+            if (body.change.diff.type) {
+              description.push(`**Type**: ${body.change.diff.type.from} → ${body.change.diff.type.to}`)
+            }
+            if (body.change.diff.priority) {
+              description.push(`**Priority**: ${body.change.diff.priority.from} → ${body.change.diff.priority.to}`)
+            }
+            if (body.change.diff.severity) {
+              description.push(`**Severity**: ${body.change.diff.severity.from} → ${body.change.diff.severity.to}`)
+            }
+            if (body.change.diff.assigned_to) {
+              description.push(`**Assigned to**: ${body.change.diff.assigned_to.from || 'Unassigned'} → ${body.change.diff.assigned_to.to || 'Unassigned'}`)
+            }
+            if (body.change.diff.is_blocked) {
+              description.push(`**Blocked**: ${body.change.diff.is_blocked.from ? 'Yes' : 'No'} → ${body.change.diff.is_blocked.to ? 'Yes' : 'No'}`)
+              if (body.change.diff.blocked_note) {
+                description.push(`**Blocked Note**: ${body.change.diff.blocked_note.from || 'None'} → ${body.change.diff.blocked_note.to || 'None'}`)
+              }
+            }
+            if (body.change.diff.milestone) {
+              description.push(`**Milestone**: ${body.change.diff.milestone.from || 'None'} → ${body.change.diff.milestone.to || 'None'}`)
+            }
+            
+            color = 0xffff00 // Yellow
+            break
+        }
+
+        await discordWebhook.send({
+          username: 'Taiga',
+          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+          embeds: [{
+            'author': {
+              name: title,
+              url: issue.permalink
+            },
+            'description': description,
+            'timestamp': body.date,
+            'footer': { icon_url: body.by.photo, text: body.by.full_name },
+            'color': color
+          }]
+        })
       }
       response.status(200).send('Event received!')
     } else {
