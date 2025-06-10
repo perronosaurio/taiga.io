@@ -20,6 +20,10 @@
     - Create
     - Delete
     - Update (including changes to name, dates, and status)
+  - User Story events:
+    - Create (with points, tags, and blocking status)
+    - Delete
+    - Update (including changes to milestone, subject, description, status, assignment, and blocking status)
   - Task events (existing functionality)
 
   <a href="http://taigaio.github.io/taiga-doc/dist/webhooks.html">Read the taiga.io documentation,</a>

@@ -99,6 +99,83 @@ express()
             'color': color
           }]
         })
+      } else if (body.type === 'userstory') {
+        const userStory = body.data
+        let title, description, color
+
+        switch (body.action) {
+          case 'create':
+            title = `Created User Story #${userStory.ref} in ${userStory.project.name}`
+            description = [
+              `**Subject**: ${userStory.subject}`,
+              `**Description**: ${userStory.description || 'No description'}`,
+              `**Status**: ${userStory.status.name}`,
+              `**Points**: ${userStory.points.map(p => `${p.role}: ${p.value}`).join(', ') || 'No points'}`,
+              `**Tags**: ${userStory.tags.join(', ') || 'No tags'}`,
+              userStory.is_blocked ? `**Blocked**: Yes\n**Blocked Note**: ${userStory.blocked_note}` : '',
+              `**Owner**: ${userStory.owner.full_name}`,
+              userStory.assigned_to ? `**Assigned to**: ${userStory.assigned_to.full_name}` : '**Assigned to**: Unassigned'
+            ].filter(Boolean).join('\n')
+            color = 0x00ff00 // Green
+            break
+
+          case 'delete':
+            title = `Deleted User Story #${userStory.ref} from ${userStory.project.name}`
+            description = [
+              `**Subject**: ${userStory.subject}`,
+              `**Description**: ${userStory.description || 'No description'}`,
+              `**Status**: ${userStory.status.name}`,
+              `**Points**: ${userStory.points.map(p => `${p.role}: ${p.value}`).join(', ') || 'No points'}`,
+              `**Tags**: ${userStory.tags.join(', ') || 'No tags'}`,
+              userStory.milestone ? `**Milestone**: ${userStory.milestone.name}` : '**Milestone**: None'
+            ].filter(Boolean).join('\n')
+            color = 0xff0000 // Red
+            break
+
+          case 'change':
+            title = `Updated User Story #${userStory.ref} in ${userStory.project.name}`
+            description = []
+            
+            if (body.change.diff.milestone) {
+              description.push(`**Milestone**: ${body.change.diff.milestone.from || 'None'} → ${body.change.diff.milestone.to || 'None'}`)
+            }
+            if (body.change.diff.subject) {
+              description.push(`**Subject**: ${body.change.diff.subject.from} → ${body.change.diff.subject.to}`)
+            }
+            if (body.change.diff.description) {
+              description.push(`**Description**: ${body.change.diff.description.from || 'None'} → ${body.change.diff.description.to || 'None'}`)
+            }
+            if (body.change.diff.status) {
+              description.push(`**Status**: ${body.change.diff.status.from} → ${body.change.diff.status.to}`)
+            }
+            if (body.change.diff.assigned_to) {
+              description.push(`**Assigned to**: ${body.change.diff.assigned_to.from || 'Unassigned'} → ${body.change.diff.assigned_to.to || 'Unassigned'}`)
+            }
+            if (body.change.diff.is_blocked) {
+              description.push(`**Blocked**: ${body.change.diff.is_blocked.from ? 'Yes' : 'No'} → ${body.change.diff.is_blocked.to ? 'Yes' : 'No'}`)
+              if (body.change.diff.blocked_note) {
+                description.push(`**Blocked Note**: ${body.change.diff.blocked_note.from || 'None'} → ${body.change.diff.blocked_note.to || 'None'}`)
+              }
+            }
+            
+            color = 0xffff00 // Yellow
+            break
+        }
+
+        await discordWebhook.send({
+          username: 'Taiga',
+          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+          embeds: [{
+            'author': {
+              name: title,
+              url: userStory.permalink
+            },
+            'description': description,
+            'timestamp': body.date,
+            'footer': { icon_url: body.by.photo, text: body.by.full_name },
+            'color': color
+          }]
+        })
       } else if (body.type === 'task' && body.action === 'create') {
         await discordWebhook.send({
           username: 'Taiga',
