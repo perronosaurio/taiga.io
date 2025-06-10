@@ -1,10 +1,10 @@
 const crypto = require('crypto')
 const { COLORS, EMBED } = require('../config/constants')
 
-const verifySignature = (key, data, signature) => {
+const verifySignature = (key, rawBody, signature) => {
   const hmac = crypto.createHmac('sha1', key)
-  hmac.update(data)
-  return hmac.digest('hex') === signature
+  hmac.update(rawBody)
+  return hmac.digest('hex') === signature?.trim()
 }
 
 const formatDate = (dateString) => {

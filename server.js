@@ -11,45 +11,59 @@ const handleIssueEvent = require('./src/handlers/issueHandler')
 
 const app = express()
 app.use(express.static('public'))
-app.use(bodyParser.json())
+
+// First: Save raw body for signature verification
+app.use('/webhook', express.raw({
+  type: 'application/json',
+  verify: (req, res, buf) => {
+    req.rawBody = buf
+  }
+}))
+
+// Then: Parse JSON for body processing
+app.use('/webhook', bodyParser.json())
 
 app.get('/webhook', (request, response) => response.sendStatus(200))
 
 app.post('/webhook', async (request, response) => {
   const signature = request.headers['x-taiga-webhook-signature']
-  const rawBody = JSON.stringify(request.body)
+  const rawBody = request.rawBody
+  const parsedBody = request.body
   
   if (!verifySignature(process.env.WEBHOOK_SECRET, rawBody, signature)) {
+    console.error('Invalid signature:', {
+      computed: crypto.createHmac('sha1', process.env.WEBHOOK_SECRET).update(rawBody).digest('hex'),
+      received: signature
+    })
     return response.status(401).send('Invalid signature')
   }
 
-  if (request.body) {
+  if (parsedBody) {
     const discordWebhook = new WebhookClient({ url: process.env.WEBHOOK_URL })
-    const body = request.body
 
     try {
       let embed
 
-      if (body.type === 'test') {
+      if (parsedBody.type === 'test') {
         embed = {
           description: 'just a test',
-          timestamp: body.date,
+          timestamp: parsedBody.date,
           footer: { 
-            icon_url: body.by.photo, 
-            text: body.by.full_name 
+            icon_url: parsedBody.by.photo, 
+            text: parsedBody.by.full_name 
           },
           color: COLORS.TEST
         }
-      } else if (body.type === 'milestone') {
-        embed = handleMilestoneEvent(body)
-      } else if (body.type === 'userstory') {
-        embed = handleUserStoryEvent(body)
-      } else if (body.type === 'task') {
-        embed = handleTaskEvent(body)
-      } else if (body.type === 'issue') {
-        embed = handleIssueEvent(body)
-      } else if (body.type === 'wikipage') {
-        embed = handleWikiPageEvent(body)
+      } else if (parsedBody.type === 'milestone') {
+        embed = handleMilestoneEvent(parsedBody)
+      } else if (parsedBody.type === 'userstory') {
+        embed = handleUserStoryEvent(parsedBody)
+      } else if (parsedBody.type === 'task') {
+        embed = handleTaskEvent(parsedBody)
+      } else if (parsedBody.type === 'issue') {
+        embed = handleIssueEvent(parsedBody)
+      } else if (parsedBody.type === 'wikipage') {
+        embed = handleWikiPageEvent(parsedBody)
       }
 
       if (embed) {
