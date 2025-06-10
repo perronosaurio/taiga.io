@@ -3,7 +3,12 @@ module.exports = {
     CREATE: 0x00ff00,  // Green
     DELETE: 0xff0000,  // Red
     CHANGE: 0xffff00,  // Yellow
-    TEST: 0x5000      // Blue
+    TEST: 0x5000,      // Blue
+    PRIORITY_COLORS: {
+      HIGH: 0xe74c3c,    // Red
+      MEDIUM: 0xf1c40f,  // Yellow
+      LOW: 0x2ecc71     // Green
+    }
   },
   
   EMBED: {
@@ -25,12 +30,6 @@ module.exports = {
     READY: 0x2ecc71,    // Green
     CLOSED: 0x95a5a6,   // Gray
     BLOCKED: 0xe74c3c   // Red
-  },
-
-  PRIORITY_COLORS: {
-    HIGH: 0xe74c3c,    // Red
-    MEDIUM: 0xf1c40f,  // Yellow
-    LOW: 0x2ecc71     // Green
   },
 
   SEVERITY_COLORS: {
