@@ -28,7 +28,7 @@ app.get('/webhook', (request, response) => response.sendStatus(200))
 app.post('/webhook', async (request, response) => {
   const signature = request.headers['x-taiga-webhook-signature']
   const rawBody = request.rawBody
-  const parsedBody = request.body
+  const parsedBody = JSON.parse(rawBody.toString('utf8'))
   
   if (!verifySignature(process.env.WEBHOOK_SECRET, rawBody, signature)) {
     console.error('Invalid signature:', {
@@ -39,8 +39,6 @@ app.post('/webhook', async (request, response) => {
   }
 
   if (parsedBody) {
-    const discordWebhook = new WebhookClient({ url: process.env.WEBHOOK_URL })
-
     try {
       let embed
 
@@ -67,7 +65,13 @@ app.post('/webhook', async (request, response) => {
       }
 
       if (embed) {
-        await discordWebhook.send({
+        const webhookClient = new WebhookClient({ 
+          url: process.env.WEBHOOK_URL,
+          id: process.env.WEBHOOK_ID,
+          token: process.env.WEBHOOK_TOKEN
+        })
+
+        await webhookClient.send({
           username: EMBED.AUTHOR.NAME,
           avatarURL: EMBED.AUTHOR.ICON_URL,
           embeds: [embed]
