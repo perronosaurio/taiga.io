@@ -1,38 +1,98 @@
-<div align="center">
-  <img src="https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png"><br>
-  <b>A simple Webhook built on Express for connect <a href="https://taiga.io/">Taiga.io</a> with <a href="https://discordapp.com/">Discord</a><b>
-  <br><br>
+# Taiga Webhook Server
 
-  `npm install`, `npm start`
+A simple webhook server for Taiga that forwards events to Discord.
 
-  ## Setup
-  1. Create a `.env` file in the root directory
-  2. Add your Discord webhook URL and Taiga webhook secret:
-     ```
-     WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-id/your-webhook-token
-     WEBHOOK_SECRET=your-taiga-webhook-secret
-     ```
-  3. Start the server with `npm start`
+## Features
 
-  ## Supported Events
-  - Test events
-  - Milestone (EPIC) events:
-    - Create
-    - Delete
-    - Update (including changes to name, dates, and status)
-  - User Story events:
-    - Create (with points, tags, and blocking status)
-    - Delete
-    - Update (including changes to milestone, subject, description, status, assignment, and blocking status)
-  - Task events:
-    - Create (with user story, milestone, and blocking status)
-    - Delete
-    - Update (including changes to assignment, subject, description, status, blocking status, milestone, and user story)
-  - Issue events:
-    - Create (with type, priority, severity, and blocking status)
-    - Delete
-    - Update (including changes to status, type, priority, severity, assignment, blocking status, and milestone)
+- Forwards Taiga events to Discord webhooks
+- Supports milestone, user story, task, issue, and wiki page events
+- Verifies webhook signatures for security
+- Includes detailed event information in Discord messages
 
-  <a href="http://taigaio.github.io/taiga-doc/dist/webhooks.html">Read the taiga.io documentation,</a>
-  <a href="http://discord.gg/7vx3S4H">Get support in our discord server</a>
-</div>
+## Supported Events
+
+### Milestones
+- Create
+- Delete
+- Change
+
+### User Stories
+- Create
+- Delete
+- Change
+
+### Tasks
+- Create
+- Delete
+- Change
+
+### Issues
+- Create
+- Delete
+- Change
+
+### Wiki Pages
+- Create
+- Delete
+- Change
+
+## Setup
+
+1. Clone this repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables:
+   ```bash
+   export WEBHOOK_SECRET="your-taiga-webhook-secret"
+   export WEBHOOK_URL="your-discord-webhook-url"
+   export PORT=3000
+   ```
+4. Start the server:
+   ```bash
+   node server.js
+   ```
+
+## Configuration
+
+The server requires the following environment variables:
+
+- `WEBHOOK_SECRET`: The secret key used to verify Taiga webhook signatures
+- `WEBHOOK_URL`: The Discord webhook URL to forward events to
+- `PORT`: The port number to run the server on (default: 3000)
+
+## Event Details
+
+### Milestone Events
+- Create: Shows milestone name, project, owner, and estimated dates
+- Delete: Shows milestone name, project, and owner
+- Change: Shows changes to name, estimated dates, and status
+
+### User Story Events
+- Create: Shows story subject, project, owner, and points
+- Delete: Shows story subject, project, and owner
+- Change: Shows changes to subject, points, and status
+
+### Task Events
+- Create: Shows task subject, project, owner, and status
+- Delete: Shows task subject, project, and owner
+- Change: Shows changes to subject, status, and assignee
+
+### Issue Events
+- Create: Shows issue subject, project, owner, priority, and severity
+- Delete: Shows issue subject, project, and owner
+- Change: Shows changes to subject, status, priority, and severity
+
+### Wiki Page Events
+- Create: Shows page slug, project, content, owner, and last modifier
+- Delete: Shows page slug, project, content, and owner
+- Change: Shows changes to content with diff information
+
+## Security
+
+The server verifies webhook signatures using HMAC-SHA1 to ensure that events are coming from your Taiga instance.
+
+## License
+
+MIT
