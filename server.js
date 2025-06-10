@@ -30,9 +30,9 @@ app.post('/webhook', async (request, response) => {
   const rawBody = request.rawBody
   const parsedBody = JSON.parse(rawBody.toString('utf8'))
   
-  if (!verifySignature(process.env.WEBHOOK_SECRET, rawBody, signature)) {
+  if (!verifySignature(process.env.KEY, rawBody, signature)) {
     console.error('Invalid signature:', {
-      computed: crypto.createHmac('sha1', process.env.WEBHOOK_SECRET).update(rawBody).digest('hex'),
+      computed: crypto.createHmac('sha1', process.env.KEY).update(rawBody).digest('hex'),
       received: signature
     })
     return response.status(401).send('Invalid signature')
@@ -65,11 +65,7 @@ app.post('/webhook', async (request, response) => {
       }
 
       if (embed) {
-        const webhookClient = new WebhookClient({ 
-          url: process.env.WEBHOOK_URL,
-          id: process.env.WEBHOOK_ID,
-          token: process.env.WEBHOOK_TOKEN
-        })
+        const webhookClient = new WebhookClient(process.env.WEBHOOK_ID, process.env.WEBHOOK_TOKEN)
 
         await webhookClient.send({
           username: EMBED.AUTHOR.NAME,
