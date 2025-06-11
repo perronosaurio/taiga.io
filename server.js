@@ -1,155 +1,153 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-
 const { WebhookClient } = require('discord.js')
+const { verifySignature } = require('./src/utils/helpers')
+const { COLORS, EMBED } = require('./src/config/constants')
+const handleWikiPageEvent = require('./src/handlers/wikiPageHandler')
+const handleMilestoneEvent = require('./src/handlers/milestoneHandler')
+const handleUserStoryEvent = require('./src/handlers/userStoryHandler')
+const handleTaskEvent = require('./src/handlers/taskHandler')
+const handleIssueEvent = require('./src/handlers/issueHandler')
 
-express()
-  .use(express.static('public'))
-  .use(bodyParser.json())
-  .get('/webhook', (request, response) => response.sendStatus(200))
-  .post('/webhook', async (request, response) => {
-    if (request.body) {
-      const discordWebhook = new WebhookClient(process.env.WEBHOOKID, process.env.WEBHOOKTOKEN)
-      const body = request.body
+const app = express()
+app.use(express.static('public'))
 
-      if (body.type === 'test') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'description': 'just a test',
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.full_name },
-            'color': 0x5000
-          }]
-        })
-      } else if (body.type === 'task' && body.action === 'create') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Created subtask #${body.data.ref} on ${body.data.project.name}`,
-              url: `${body.data.project.permalink}/task/${body.data.ref}`
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Instance**: [${body.data.user_story.subject}](https://tree.taiga.io/project/naedian-hythelia/task/${body.data.ref})`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Assigned to**: ${body.data.assigned_to ? body.data.assigned_to.username : 'Nobody'}`,
-              `**Status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'userstory' && body.action === 'create') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Created task #${body.data.ref} on ${body.data.project.name}`,
-              url: `${body.data.project.permalink}/us/${body.data.ref}`
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Assigned to**: ${body.data.assigned_to ? body.data.assigned_to.username : 'Nobody'}`,
-              `**Status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'task' && body.action === 'delete') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Deleted subtask #${body.data.ref} on ${body.data.project.name}`,
-              url: body.data.project.permalink
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Instance**: [${body.data.user_story.subject}](${body.data.project.permalink}/task/${body.data.ref})`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Old status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if (body.type === 'userstory' && body.action === 'delete') {
-        await discordWebhook.send({
-          username: 'Taiga',
-          avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-          embeds: [{
-            'author': {
-              name: `Deleted task #${body.data.ref} on ${body.data.project.name}`,
-              url: body.data.project.permalink
-            },
-            'description': [
-              `**Subject**: ${body.data.subject}`,
-              `**Description**: ${body.data.description ? body.data.description : 'Nothing'}`,
-              `**Old status**: ${body.data.status.name}`
-            ].join('\n'),
-            'timestamp': body.date,
-            'footer': { icon_url: body.by.photo, text: body.by.username },
-            'color': parseInt(body.data.status.color.replace('#', ''), 16)
-          }]
-        })
-      } else if ((body.type === 'task' || body.type === 'userstory') && body.action === 'change') {
-        const description = [ '' ]
-        if (body.change.diff.status) description.push(`**Old status**: ${body.change.diff.status.from}`)
-        if (body.change.diff.subject) description.push(`**Old subject**: ${body.change.diff.subject.from}`)
-        if (body.change.diff.assigned_to) description.push(`**Old assigned**: ${body.change.diff.assigned_to.from ? body.change.diff.assigned_to.from : 'Nobody'}`)
-        if (body.change.diff.description_diff) description.push(`**Old description**: ${body.change.diff.description_diff.from ? body.change.diff.description_diff.from : 'Nothing'}`)
-        if (body.change.diff.assigned_users) description.push(`**Old assigned**: ${body.change.diff.assigned_users.from ? body.change.diff.assigned_users.from : 'Nobody'}`)
+// First: Save raw body for signature verification
+app.use('/webhook', express.raw({
+  type: 'application/json',
+  verify: (req, res, buf) => {
+    req.rawBody = buf
+  }
+}))
 
-        Object.keys(body.change.diff).map(d => {
-          switch (d) {
-            case 'subject':
-              description.push(`**New subject**: ${body.change.diff.subject.to}`)
-              break
-            case 'status':
-              description.push(`**New status**: ${body.change.diff.status.to}`)
-              break
-            case 'assigned_to':
-              description.push(`**New assigned**: ${body.change.diff.assigned_to.to ? body.change.diff.assigned_to.to : 'Nobody'} `)
-              break
-            case 'description_diff':
-              description.push(`**New description**: ${body.change.diff.description_diff.to ? body.change.diff.description_diff.to : 'Nothing'}`)
-              break
-            case 'assigned_users':
-              description.push(`**New assigned**: ${body.change.diff.assigned_users.to ? body.change.diff.assigned_users.to : 'Nobody'}`)
-          }
-        })
+// Then: Parse JSON for body processing
+app.use('/webhook', bodyParser.json())
 
-        if (description.length !== 0) {
-          await discordWebhook.send({
-            username: 'Taiga',
-            avatarURL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
-            embeds: [{
-              'author': {
-                name: `Updated ${body.type === 'task' ? 'subtask' : 'task'} #${body.data.ref} on ${body.data.project.name}`,
-                url: `${body.data.project.permalink}/task/${body.data.ref}`
-              },
-              'description': description.join('\n'),
-              'timestamp': body.date,
-              'footer': { icon_url: body.by.photo, text: body.by.username },
-              'color': parseInt(body.data.status.color.replace('#', ''), 16)
-            }]
-          })
-        }
+app.get('/webhook', (request, response) => response.sendStatus(200))
+
+// Create webhook client once
+const webhookClient = new WebhookClient(process.env.WEBHOOK_ID, process.env.WEBHOOK_TOKEN)
+
+// Helper function to create error embed
+const createErrorEmbed = (error, body) => {
+  return {
+    author: {
+      name: '❌ Error Processing Webhook',
+      icon_url: EMBED.AUTHOR.ICON_URL
+    },
+    color: COLORS.ERROR,
+    timestamp: new Date().toISOString(),
+    fields: [
+      {
+        name: '🔍 Error Details',
+        value: `\`\`\`${error.message}\`\`\``,
+        inline: false
+      },
+      {
+        name: '📝 Event Type',
+        value: body?.type || 'Unknown',
+        inline: true
+      },
+      {
+        name: '📝 Action',
+        value: body?.action || 'Unknown',
+        inline: true
+      },
+      {
+        name: '📚 Project',
+        value: body?.data?.project?.name || 'Unknown',
+        inline: true
+      },
+      {
+        name: '👤 Triggered By',
+        value: body?.by?.full_name || 'Unknown',
+        inline: true
       }
+    ],
+    footer: {
+      icon_url: EMBED.FOOTER.ICON_URL,
+      text: `Error occurred at ${new Date().toLocaleString()}`
+    }
+  }
+}
+
+app.post('/webhook', async (request, response) => {
+  try {
+    const signature = request.headers['x-taiga-webhook-signature']
+    const rawBody = request.rawBody
+    const parsedBody = JSON.parse(rawBody.toString('utf8'))
+    
+    if (!verifySignature(process.env.KEY, rawBody, signature)) {
+      console.error('Invalid signature:', {
+        computed: crypto.createHmac('sha1', process.env.KEY).update(rawBody).digest('hex'),
+        received: signature
+      })
+      return response.status(401).send('Invalid signature')
+    }
+
+    if (!parsedBody) {
+      throw new Error('No body received in webhook')
+    }
+
+    let embed
+
+    if (parsedBody.type === 'test') {
+      embed = {
+        description: 'just a test',
+        timestamp: parsedBody.date,
+        footer: { 
+          icon_url: parsedBody.by.photo, 
+          text: parsedBody.by.full_name 
+        },
+        color: COLORS.TEST
+      }
+    } else if (parsedBody.type === 'milestone') {
+      embed = handleMilestoneEvent(parsedBody)
+    } else if (parsedBody.type === 'userstory') {
+      embed = handleUserStoryEvent(parsedBody)
+    } else if (parsedBody.type === 'task') {
+      embed = handleTaskEvent(parsedBody)
+    } else if (parsedBody.type === 'issue') {
+      embed = handleIssueEvent(parsedBody)
+    } else if (parsedBody.type === 'wikipage') {
+      embed = handleWikiPageEvent(parsedBody)
+    } else {
+      throw new Error(`Unsupported event type: ${parsedBody.type}`)
+    }
+
+    if (embed) {
+      await webhookClient.send({
+        username: EMBED.AUTHOR.NAME,
+        avatarURL: EMBED.AUTHOR.ICON_URL,
+        embeds: [embed]
+      })
       response.status(200).send('Event received!')
     } else {
-      response.status(404).send('Something went wrong!')
+      throw new Error('No embed generated for event')
     }
-  })
-  .listen(process.env.PORT, () => console.log(`Webhook listening on port ${process.env.PORT}!`))
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Error processing webhook:', {
+      error: error.message,
+      stack: error.stack,
+      body: request.body ? JSON.stringify(request.body, null, 2) : 'No body'
+    })
+
+    // Send error embed to Discord
+    try {
+      const errorEmbed = createErrorEmbed(error, request.body)
+      await webhookClient.send({
+        username: EMBED.AUTHOR.NAME,
+        avatarURL: EMBED.AUTHOR.ICON_URL,
+        embeds: [errorEmbed]
+      })
+    } catch (webhookError) {
+      console.error('Failed to send error webhook:', webhookError)
+    }
+
+    response.status(500).send('Error processing webhook')
+  }
+})
+
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`Webhook listening on port ${PORT}!`))
