@@ -74,6 +74,11 @@ const handleUserStoryEvent = (body) => {
         value: `[${userStory.project.name}](${userStory.project.permalink})`,
         inline: true
       },
+      {
+        name: '👤 Updated By',
+        value: `[${changer.full_name}](${changer.permalink})`,
+        inline: true
+      },
       statusField,
       ...extraFields
     ]

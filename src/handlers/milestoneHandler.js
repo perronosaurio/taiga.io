@@ -4,6 +4,7 @@ const { createBaseEmbed, formatDate, formatUserInfo, formatProjectInfo } = requi
 const handleMilestoneEvent = (body) => {
   const milestone = body.data
   let title, color, fields = []
+  const changer = body.by
 
   switch (body.action) {
     case 'create':
@@ -13,6 +14,11 @@ const handleMilestoneEvent = (body) => {
         {
           name: '📚 Project',
           value: formatProjectInfo(milestone.project),
+          inline: true
+        },
+        {
+          name: '👤 Updated By',
+          value: `[${changer.full_name}](${changer.permalink})`,
           inline: true
         },
         {
@@ -48,6 +54,11 @@ const handleMilestoneEvent = (body) => {
           inline: true
         },
         {
+          name: '👤 Updated By',
+          value: `[${changer.full_name}](${changer.permalink})`,
+          inline: true
+        },
+        {
           name: '👤 Owner',
           value: formatUserInfo(milestone.owner),
           inline: true
@@ -72,6 +83,11 @@ const handleMilestoneEvent = (body) => {
         {
           name: '📚 Project',
           value: formatProjectInfo(milestone.project),
+          inline: true
+        },
+        {
+          name: '👤 Updated By',
+          value: `[${changer.full_name}](${changer.permalink})`,
           inline: true
         },
         {
@@ -122,7 +138,7 @@ const handleMilestoneEvent = (body) => {
   }
 
   return {
-    ...createBaseEmbed(title, milestone.permalink, color, body.date, body.by),
+    ...createBaseEmbed(title, milestone.permalink, color, body.date, changer),
     fields: fields
   }
 }

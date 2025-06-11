@@ -88,6 +88,11 @@ const handleTaskEvent = (body) => {
         value: `[${task.project.name}](${task.project.permalink})`,
         inline: true
       },
+      {
+        name: '👤 Updated By',
+        value: `[${changer.full_name}](${changer.permalink})`,
+        inline: true
+      },
       statusField,
       ...extraFields
     ]

@@ -75,6 +75,11 @@ const handleIssueEvent = (body) => {
           value: `[${issue.project.name}](${issue.project.permalink})`,
           inline: true
         },
+        {
+          name: '👤 Updated By',
+          value: `[${changer.full_name}](${changer.permalink})`,
+          inline: true
+        },
         statusField,
         {
           name: '⚠️ Type',
