@@ -4,6 +4,7 @@ module.exports = {
     DELETE: 0xff0000,  // Red
     CHANGE: 0xffff00,  // Yellow
     TEST: 0x5000,      // Blue
+    ERROR: 0xff0000,   // Red for errors
     PRIORITY_COLORS: {
       HIGH: 0xe74c3c,    // Red
       MEDIUM: 0xf1c40f,  // Yellow
