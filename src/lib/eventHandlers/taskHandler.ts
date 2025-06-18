@@ -1,12 +1,70 @@
-const { COLORS } = require('../config/constants')
-const { createBaseEmbed, formatDate, formatUserInfo, formatProjectInfo } = require('../utils/helpers')
+const COLORS = {
+  CREATE: 0x00ff00,  // Green
+  DELETE: 0xff0000,  // Red
+  CHANGE: 0xffff00,  // Yellow
+}
 
-const handleTaskEvent = (body) => {
+const EMBED = {
+  FOOTER: {
+    ICON_URL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+    TEXT: 'Taiga.io'
+  },
+  AUTHOR: {
+    ICON_URL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+    NAME: 'Taiga'
+  }
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+function createBaseEmbed(title: string, url: string, color: number, timestamp: string, changer: any, assignedTo?: any, sprint?: any) {
+  return {
+    author: {
+      name: title,
+      url: url
+    },
+    color: color,
+    timestamp: timestamp,
+    thumbnail: changer?.photo ? { url: changer.photo } : undefined,
+    footer: {
+      icon_url: EMBED.FOOTER.ICON_URL,
+      text: `Managed by Koders • ${formatDate(timestamp)}`
+    },
+    fields: [
+      ...(assignedTo ? [{
+        name: '👥 Assigned To',
+        value: `[${assignedTo.full_name}](${assignedTo.permalink})`,
+        inline: true
+      }] : []),
+      ...(changer ? [{
+        name: '📝 Changed By',
+        value: `[${changer.full_name}](${changer.permalink})`,
+        inline: true
+      }] : []),
+      ...(sprint ? [{
+        name: '🏃 Sprint',
+        value: sprint.name,
+        inline: true
+      }] : [])
+    ]
+  }
+}
+
+export function handleTaskEvent(body: any) {
   const task = body.data
-  let title, color, extraFields = []
+  let title = '', color = COLORS.CHANGE, extraFields: any[] = []
   const assignedTo = task.assigned_to
   const changer = body.by
-  const sprint = task.milestone // assuming milestone is used as sprint
+  const sprint = task.milestone
 
   let statusField
   if (body.action === 'change' && body.change?.diff?.status) {
@@ -97,6 +155,4 @@ const handleTaskEvent = (body) => {
       ...extraFields
     ]
   }
-}
-
-module.exports = handleTaskEvent 
+} 

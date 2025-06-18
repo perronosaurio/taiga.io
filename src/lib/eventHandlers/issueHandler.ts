@@ -1,10 +1,83 @@
-const { COLORS } = require('../config/constants')
-const { createBaseEmbed, formatDate, formatUserInfo, formatProjectInfo, getPriorityColor, getSeverityColor } = require('../utils/helpers')
+const COLORS = {
+  CREATE: 0x00ff00,  // Green
+  DELETE: 0xff0000,  // Red
+  CHANGE: 0xffff00,  // Yellow
+  ERROR: 0xff0000,   // Red for errors
+  PRIORITY_COLORS: {
+    HIGH: 0xe74c3c,    // Red
+    MEDIUM: 0xf1c40f,  // Yellow
+    LOW: 0x2ecc71     // Green
+  }
+}
 
-const handleIssueEvent = (body) => {
+const EMBED = {
+  FOOTER: {
+    ICON_URL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+    TEXT: 'Taiga.io'
+  },
+  AUTHOR: {
+    ICON_URL: 'https://cdn.discordapp.com/attachments/596130529129005056/596406037859401738/favicon.png',
+    NAME: 'Taiga'
+  }
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+function getPriorityColor(priority: string) {
+  const priorityMap: { [key: string]: number } = {
+    'High': COLORS.PRIORITY_COLORS.HIGH,
+    'Medium': COLORS.PRIORITY_COLORS.MEDIUM,
+    'Low': COLORS.PRIORITY_COLORS.LOW
+  }
+  return priorityMap[priority] || COLORS.CHANGE
+}
+
+function createBaseEmbed(title: string, url: string, color: number, timestamp: string, changer: any, assignedTo?: any, sprint?: any) {
+  return {
+    author: {
+      name: title,
+      url: url
+    },
+    color: color,
+    timestamp: timestamp,
+    thumbnail: changer?.photo ? { url: changer.photo } : undefined,
+    footer: {
+      icon_url: EMBED.FOOTER.ICON_URL,
+      text: `Managed by Koders • ${formatDate(timestamp)}`
+    },
+    fields: [
+      ...(assignedTo ? [{
+        name: '👥 Assigned To',
+        value: `[${assignedTo.full_name}](${assignedTo.permalink})`,
+        inline: true
+      }] : []),
+      ...(changer ? [{
+        name: '📝 Changed By',
+        value: `[${changer.full_name}](${changer.permalink})`,
+        inline: true
+      }] : []),
+      ...(sprint ? [{
+        name: '🏃 Sprint',
+        value: sprint.name,
+        inline: true
+      }] : [])
+    ]
+  }
+}
+
+export function handleIssueEvent(body: any) {
   try {
     const issue = body.data
-    let title, color, extraFields = []
+    let title = '', color = COLORS.CHANGE, extraFields: any[] = []
     const assignedTo = issue.assigned_to
     const changer = body.by
     const sprint = issue.milestone
@@ -104,7 +177,7 @@ const handleIssueEvent = (body) => {
     const errorEmbed = {
       ...createBaseEmbed(
         '❌ Error Processing Issue Event',
-        null,
+        '',
         COLORS.ERROR,
         new Date().toISOString(),
         body?.by
@@ -112,7 +185,7 @@ const handleIssueEvent = (body) => {
       fields: [
         {
           name: '🔍 Error Details',
-          value: `\`\`\`${error.message}\`\`\``,
+          value: `\`\`\`${error instanceof Error ? error.message : 'Unknown error'}\`\`\``,
           inline: false
         },
         {
@@ -135,13 +208,11 @@ const handleIssueEvent = (body) => {
 
     // Log the error for debugging
     console.error('Error processing issue event:', {
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
       body: JSON.stringify(body, null, 2)
     })
 
     return errorEmbed
   }
-}
-
-module.exports = handleIssueEvent 
+} 
