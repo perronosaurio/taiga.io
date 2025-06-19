@@ -232,19 +232,21 @@ export default function Dashboard() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <AppBar position="static">
         <Toolbar>
-          <TaigaIcon size={32} showText={true} />
-          <Box display="flex" alignItems="center" gap={2} sx={{ ml: 2 }}>
+          <TaigaIcon size={32} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
+            Taiga Webhook Manager
+          </Typography>
+          <Box display="flex" alignItems="center" gap={2}>
             <Avatar sx={{ bgcolor: 'secondary.main' }}>
               {user?.username?.charAt(0).toUpperCase()}
             </Avatar>
             <Typography variant="body2">
               {user?.full_name}
             </Typography>
+            <IconButton color="inherit" onClick={handleLogout}>
+              <LogoutIcon />
+            </IconButton>
           </Box>
-          <Box sx={{ flexGrow: 1 }} />
-          <IconButton color="inherit" onClick={handleLogout}>
-            <LogoutIcon />
-          </IconButton>
         </Toolbar>
       </AppBar>
 
