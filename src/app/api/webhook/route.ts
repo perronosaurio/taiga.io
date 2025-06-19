@@ -6,6 +6,7 @@ import { handleUserStoryEvent } from '../../../lib/eventHandlers/userStoryHandle
 import { handleTaskEvent } from '../../../lib/eventHandlers/taskHandler'
 import { handleIssueEvent } from '../../../lib/eventHandlers/issueHandler'
 import { handleWikiPageEvent } from '../../../lib/eventHandlers/wikiPageHandler'
+import { handleEpicEvent } from '../../../lib/eventHandlers/epicHandler'
 
 const COLORS = {
   CREATE: 0x00ff00,  // Green
@@ -31,7 +32,8 @@ const EVENT_HANDLERS = {
   'userstory': handleUserStoryEvent,
   'task': handleTaskEvent,
   'issue': handleIssueEvent,
-  'wikipage': handleWikiPageEvent
+  'wikipage': handleWikiPageEvent,
+  'epic': handleEpicEvent
 }
 
 function verifySignature(key: string, rawBody: Buffer, signature: string): boolean {
