@@ -64,7 +64,7 @@ interface User {
 }
 
 const ENTITY_TYPES = {
-  milestone: '📅 Milestones',
+  epic: '🗂️ Epics',
   userstory: '📝 User Stories',
   task: '📋 Tasks',
   issue: '🐛 Issues',
