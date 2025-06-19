@@ -165,6 +165,8 @@ class WebhookManager {
       }
 
       await webhookClient.send({
+        username: 'Taiga',
+        avatarURL: 'https://avatars.githubusercontent.com/u/6905422?s=200&v=4',
         embeds: [testEmbed]
       })
 
@@ -217,6 +219,8 @@ class WebhookManager {
         const { WebhookClient } = await import('discord.js')
         const webhookClient = new WebhookClient({ url: webhook.url })
         await webhookClient.send({
+          username: 'Taiga',
+          avatarURL: 'https://avatars.githubusercontent.com/u/6905422?s=200&v=4',
           embeds: [embed]
         })
         
