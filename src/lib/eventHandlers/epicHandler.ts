@@ -46,7 +46,8 @@ function formatProjectInfo(project: any) {
 function createBaseEmbed(title: string, url: string, color: number, timestamp: string, changer: any) {
   return {
     author: {
-      name: title,
+      name: 'Taiga',
+      icon_url: 'https://avatars.githubusercontent.com/u/6905422?s=200&v=4',
       url: url
     },
     color: color,
