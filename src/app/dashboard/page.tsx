@@ -38,9 +38,10 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Send as SendIcon,
-  Logout as LogoutIcon,
-  GitHub as GitHubIcon
+  Logout as LogoutIcon
 } from '@mui/icons-material'
+import TaigaIcon from '../../components/TaigaIcon'
+import { getWebhookUrl } from '../../lib/config'
 
 interface Project {
   id: number
@@ -231,21 +232,19 @@ export default function Dashboard() {
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <AppBar position="static">
         <Toolbar>
-          <GitHubIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Taiga Webhook Manager
-          </Typography>
-          <Box display="flex" alignItems="center" gap={2}>
+          <TaigaIcon size={32} showText={true} />
+          <Box display="flex" alignItems="center" gap={2} sx={{ ml: 2 }}>
             <Avatar sx={{ bgcolor: 'secondary.main' }}>
               {user?.username?.charAt(0).toUpperCase()}
             </Avatar>
             <Typography variant="body2">
               {user?.full_name}
             </Typography>
-            <IconButton color="inherit" onClick={handleLogout}>
-              <LogoutIcon />
-            </IconButton>
           </Box>
+          <Box sx={{ flexGrow: 1 }} />
+          <IconButton color="inherit" onClick={handleLogout}>
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -282,6 +281,35 @@ export default function Dashboard() {
                 ))}
               </Select>
             </FormControl>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              📋 Taiga Webhook Configuration
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Configure this webhook URL in your Taiga project settings:
+            </Typography>
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: 'grey.100',
+                borderRadius: 1,
+                fontFamily: 'monospace',
+                fontSize: '0.875rem',
+                wordBreak: 'break-all'
+              }}
+            >
+              {getWebhookUrl()}
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              This URL will receive all Taiga events and forward them to your configured Discord webhooks.
+            </Typography>
+            <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block', fontWeight: 'bold' }}>
+              Don't forget: Set the webhook secret/key in Taiga to match <code>TAIGA_WEBHOOK_SECRET</code> in your <code>.env.local</code>!
+            </Typography>
           </CardContent>
         </Card>
 

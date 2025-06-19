@@ -44,7 +44,17 @@ A modern Next.js application for managing Discord webhooks for your Taiga projec
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
    ```env
-   KEY=your-taiga-webhook-secret
+   # Base URL for the application (used for webhook URLs)
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   
+   # For production, change to your actual domain
+   # NEXT_PUBLIC_BASE_URL=https://your-domain.com
+
+   # Default Taiga instance URL for login form
+   NEXT_PUBLIC_TAIGA_DEFAULT_URL=https://api.taiga.io
+
+   # Secret key for verifying incoming Taiga webhooks
+   TAIGA_WEBHOOK_SECRET=your-very-secret-key
    ```
 
 4. **Run the development server**
@@ -73,8 +83,16 @@ A modern Next.js application for managing Discord webhooks for your Taiga projec
 ### 4. Configure Taiga Webhook
 In your Taiga project settings, configure a webhook to point to:
 ```
-https://your-domain.com/api/webhook
+${NEXT_PUBLIC_BASE_URL}/api/webhook
 ```
+
+**Important:**
+- Set the webhook secret/key in Taiga to exactly match your `TAIGA_WEBHOOK_SECRET` in `.env.local`.
+- This ensures only authorized requests from your Taiga instance are accepted.
+
+For example:
+- Development: `http://localhost:3000/api/webhook`
+- Production: `https://your-domain.com/api/webhook`
 
 ## API Endpoints
 

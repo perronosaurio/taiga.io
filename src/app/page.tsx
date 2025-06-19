@@ -14,11 +14,13 @@ import {
   CardContent,
   CardHeader
 } from '@mui/material'
-import { Login as LoginIcon, GitHub as GitHubIcon } from '@mui/icons-material'
+import { Login as LoginIcon } from '@mui/icons-material'
+import TaigaIcon from '../components/TaigaIcon'
+
+const taigaUrl = process.env.NEXT_PUBLIC_TAIGA_DEFAULT_URL || 'https://api.taiga.io'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    taigaUrl: '',
     username: '',
     password: ''
   })
@@ -36,7 +38,11 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          taigaUrl,
+          username: formData.username,
+          password: formData.password
+        }),
       })
 
       const data = await response.json()
@@ -84,8 +90,8 @@ export default function LoginPage() {
           <CardHeader
             title={
               <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                <GitHubIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-                <Typography variant="h4" component="h1" fontWeight="bold">
+                <TaigaIcon size={32} showText={true} />
+                <Typography variant="h5" component="h1" fontWeight="bold">
                   Taiga Webhook Manager
                 </Typography>
               </Box>
@@ -100,21 +106,6 @@ export default function LoginPage() {
           
           <CardContent sx={{ p: 4 }}>
             <form onSubmit={handleSubmit} autoComplete="on">
-              <TextField
-                id="taiga-url"
-                label="Taiga URL"
-                placeholder="https://api.taiga.io"
-                value={formData.taigaUrl}
-                onChange={handleChange('taigaUrl')}
-                margin="normal"
-                required
-                variant="outlined"
-                helperText="Enter your Taiga instance URL"
-                autoComplete="url"
-                fullWidth
-                autoFocus
-              />
-              
               <TextField
                 id="username"
                 label="Username"
