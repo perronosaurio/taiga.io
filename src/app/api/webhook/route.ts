@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     const eventType = body.type.toLowerCase()
-    const projectId = body.data.project?.toString()
+    const projectId = body.data.project?.id?.toString() || body.data.project?.toString()
 
     if (!projectId) {
       console.log('[WEBHOOK] No project ID found in webhook payload')
