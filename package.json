@@ -1,19 +1,39 @@
 {
-  "name": "taiga.io",
-  "description": "A simple Webhook built on Express for taiga.io",
-  "version": "0.0.1",
-  "main": "server.js",
+  "name": "taiga-webhook-manager",
+  "version": "2.0.0",
+  "description": "A Next.js webhook manager for Taiga that forwards events to Discord",
+  "private": true,
   "scripts": {
-    "start": "node -r dotenv/config server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "express": "^4.16.4",
-    "discord.js": "^11.5.1",
-    "body-parser": "^1.19.0"
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.19",
+    "@mui/material": "^5.14.20",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.7",
+    "axios": "^1.6.2",
+    "discord.js": "^14.14.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.3",
+    "next": "14.0.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "typescript": "^5",
+    "uuid": "^9.0.1",
+    "zlib-sync": "^0.1.10"
   },
-  "license": "MIT",
   "devDependencies": {
-    "standard": "^12.0.1",
-    "dotenv": "^7.0.0"
-  }
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  },
+  "license": "MIT"
 }

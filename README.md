@@ -1,98 +1,149 @@
-# Taiga Webhook Server
+# Taiga Webhook Manager
 
-A simple webhook server for Taiga that forwards events to Discord.
+A modern Next.js application for managing Discord webhooks for your Taiga projects. This application allows project owners to configure multiple Discord channels for different types of Taiga events.
 
 ## Features
 
-- Forwards Taiga events to Discord webhooks
-- Supports milestone, user story, task, issue, and wiki page events
-- Verifies webhook signatures for security
-- Includes detailed event information in Discord messages
+- 🔐 **Secure Authentication**: Login with your Taiga credentials
+- 👑 **Owner-Only Access**: Only project owners can manage webhooks
+- 📊 **Multiple Webhooks**: Configure multiple Discord channels per project
+- 🎯 **Entity Filtering**: Choose which event types to send to each webhook
+- 🧪 **Test Functionality**: Test webhooks directly from the UI
+- 📱 **Modern UI**: Beautiful Material UI design
+- 🔄 **Real-time Updates**: Live project fetching from Taiga API
 
 ## Supported Events
 
-### Milestones
-- Create
-- Delete
-- Change
+- 📅 **Milestones/Epics**: Create, update, delete
+- 📝 **User Stories**: Create, update, delete
+- 📋 **Tasks**: Create, update, delete
+- 🐛 **Issues**: Create, update, delete
+- 📚 **Wiki Pages**: Create, update, delete
 
-### User Stories
-- Create
-- Delete
-- Change
+## Quick Start
 
-### Tasks
-- Create
-- Delete
-- Change
+### Prerequisites
 
-### Issues
-- Create
-- Delete
-- Change
+- Node.js 18+ 
+- A Taiga instance with API access
+- Discord webhook URLs
 
-### Wiki Pages
-- Create
-- Delete
-- Change
+### Installation
 
-## Setup
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd taiga-webhook-manager
+   ```
 
-1. Clone this repository
-2. Install dependencies:
+2. **Install dependencies**
    ```bash
    npm install
    ```
-3. Set up environment variables:
-   ```bash
-   export WEBHOOK_SECRET="your-taiga-webhook-secret"
-   export WEBHOOK_URL="your-discord-webhook-url"
-   export PORT=3000
+
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory:
+   ```env
+   # Base URL for the application (used for webhook URLs)
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   
+   # For production, change to your actual domain
+   # NEXT_PUBLIC_BASE_URL=https://your-domain.com
+
+   # Default Taiga instance URL for login form
+   NEXT_PUBLIC_TAIGA_DEFAULT_URL=https://api.taiga.io
+
+   # Secret key for verifying incoming Taiga webhooks
+   TAIGA_WEBHOOK_SECRET=your-very-secret-key
    ```
-4. Start the server:
+
+4. **Run the development server**
    ```bash
-   node server.js
+   npm run dev
    ```
 
-## Configuration
+5. **Access the application**
+   Open [http://localhost:3000](http://localhost:3000) in your browser
 
-The server requires the following environment variables:
+## Usage
 
-- `WEBHOOK_SECRET`: The secret key used to verify Taiga webhook signatures
-- `WEBHOOK_URL`: The Discord webhook URL to forward events to
-- `PORT`: The port number to run the server on (default: 3000)
+### 1. Login
+- Enter your Taiga URL, username, and password
+- Only project owners will be able to access the system
 
-## Event Details
+### 2. Select Project
+- Choose from your owned projects in the dropdown
 
-### Milestone Events
-- Create: Shows milestone name, project, owner, and estimated dates
-- Delete: Shows milestone name, project, and owner
-- Change: Shows changes to name, estimated dates, and status
+### 3. Manage Webhooks
+- **Add Webhook**: Click "Add Webhook" and enter Discord webhook URL
+- **Configure Events**: Select which event types to send to each webhook
+- **Test Webhook**: Use the test button to verify webhook functionality
+- **Edit/Delete**: Modify or remove webhooks as needed
 
-### User Story Events
-- Create: Shows story subject, project, owner, and points
-- Delete: Shows story subject, project, and owner
-- Change: Shows changes to subject, points, and status
+### 4. Configure Taiga Webhook
+In your Taiga project settings, configure a webhook to point to:
+```
+${NEXT_PUBLIC_BASE_URL}/api/webhook
+```
 
-### Task Events
-- Create: Shows task subject, project, owner, and status
-- Delete: Shows task subject, project, and owner
-- Change: Shows changes to subject, status, and assignee
+**Important:**
+- Set the webhook secret/key in Taiga to exactly match your `TAIGA_WEBHOOK_SECRET` in `.env.local`.
+- This ensures only authorized requests from your Taiga instance are accepted.
 
-### Issue Events
-- Create: Shows issue subject, project, owner, priority, and severity
-- Delete: Shows issue subject, project, and owner
-- Change: Shows changes to subject, status, priority, and severity
+For example:
+- Development: `http://localhost:3000/api/webhook`
+- Production: `https://your-domain.com/api/webhook`
 
-### Wiki Page Events
-- Create: Shows page slug, project, content, owner, and last modifier
-- Delete: Shows page slug, project, content, and owner
-- Change: Shows changes to content with diff information
+## API Endpoints
+
+- `POST /api/auth/login` - Authenticate with Taiga
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user info
+- `GET /api/webhooks/[projectId]` - Get project webhooks
+- `POST /api/webhooks/[projectId]` - Add new webhook
+- `PUT /api/webhooks/[projectId]/[webhookId]` - Update webhook
+- `DELETE /api/webhooks/[projectId]/[webhookId]` - Delete webhook
+- `POST /api/webhooks/[projectId]/[webhookId]/test` - Test webhook
+- `POST /api/webhook` - Receive Taiga webhooks
+
+## Deployment
+
+### Vercel (Recommended)
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy
+
+### Other Platforms
+The app can be deployed to any platform that supports Next.js:
+- Netlify
+- Railway
+- DigitalOcean App Platform
+- AWS Amplify
 
 ## Security
 
-The server verifies webhook signatures using HMAC-SHA1 to ensure that events are coming from your Taiga instance.
+- **Session Management**: Secure HTTP-only cookies with 24-hour expiry
+- **Owner Verification**: Only project owners can access webhook management
+- **Signature Verification**: Taiga webhook signatures are verified
+- **Input Validation**: All inputs are validated and sanitized
+
+## Architecture
+
+- **Frontend**: Next.js 14 with App Router, Material UI
+- **Backend**: Next.js API Routes
+- **Authentication**: Custom session-based auth with Taiga API
+- **Storage**: JSON file-based configuration (can be extended to database)
+- **Logging**: Console and file-based logging
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details
