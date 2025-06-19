@@ -1,6 +1,6 @@
 {
   "name": "taiga-webhook-manager",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A Next.js webhook manager for Taiga that forwards events to Discord",
   "private": true,
   "scripts": {
