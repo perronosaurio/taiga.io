@@ -1,10 +1,11 @@
+import { ContentPasteSearchOutlined } from '@mui/icons-material'
 import fs from 'fs/promises'
 import path from 'path'
 
 interface Webhook {
   id: string
   url: string
-  entities: string[]
+  entities: Record<string, string[]>
   createdAt: string
   lastTested: string | null
   updatedAt?: string
@@ -59,7 +60,7 @@ class WebhookManager {
     return this.config.projects[projectId] || []
   }
 
-  async addWebhook(projectId: string, webhookUrl: string, entities: string[] = []): Promise<Webhook> {
+  async addWebhook(projectId: string, webhookUrl: string, entities: Record<string, string[]> = {}): Promise<Webhook> {
     await this.loadConfig()
     
     if (!this.config.projects[projectId]) {
@@ -193,12 +194,14 @@ class WebhookManager {
     }
   }
 
-  async sendWebhooks(projectId: string, eventType: string, embed: any): Promise<any[]> {
+  async sendWebhooks(projectId: string, eventType: string, actionType:string, embed: any): Promise<any[]> {
     await this.loadConfig()
     
     const webhooks = await this.getProjectWebhooks(projectId)
-    const relevantWebhooks = webhooks.filter(webhook => 
-      webhook.entities.includes(eventType)
+
+    // Check if the entity type exists as a key and its action array includes the action type
+    const relevantWebhooks = webhooks.filter(webhook =>
+      webhook.entities[eventType] && webhook.entities[eventType].includes(actionType)
     )
 
     if (relevantWebhooks.length === 0) {
@@ -218,10 +221,29 @@ class WebhookManager {
         // Dynamic import to ensure discord.js is only loaded on server
         const { WebhookClient } = await import('discord.js')
         const webhookClient = new WebhookClient({ url: webhook.url })
+
+	const embedToSend = { ...embed }; 
+
+	// Check if the embed has a 'fields' property and if it's an array.
+	if (embedToSend.fields && Array.isArray(embedToSend.fields)) {
+		embedToSend.fields = embedToSend.fields.map((field: { value: string }) => {
+			// Discord embed field 'value' has a maximum length of 1024 characters.
+			const MAX_FIELD_VALUE_LENGTH = 1024;
+
+			// If field.value is a string and its length exceeds the limit, truncate it.
+			if (typeof field.value === 'string' && field.value.length > MAX_FIELD_VALUE_LENGTH) {
+				console.warn(`Embed field value truncated due to length limit. Original length: ${field.value.length}`);
+				return { ...field, value: field.value.substring(0, MAX_FIELD_VALUE_LENGTH) };
+			}
+			// Otherwise, return the field as is.
+			return field; 
+		});
+	}
+
         await webhookClient.send({
           username: 'Taiga',
           avatarURL: 'https://avatars.githubusercontent.com/u/6905422?s=200&v=4',
-          embeds: [embed]
+          embeds: [embedToSend]
         })
         
         results.push({

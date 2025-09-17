@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import {} from 'crypto'
 import { webhookManager } from '../../../lib/webhookManager'
-// import { handleMilestoneEvent } from '../../../lib/eventHandlers/milestoneHandler'
-import { handleUserStoryEvent } from '../../../lib/eventHandlers/userStoryHandler'
-import { handleTaskEvent } from '../../../lib/eventHandlers/taskHandler'
-import { handleIssueEvent } from '../../../lib/eventHandlers/issueHandler'
+import { MilestoneHandler } from '../../../lib/eventHandlers/milestoneHandler'
+import { UserStoryHandler } from '../../../lib/eventHandlers/userStoryHandler'
+import { TaskHandler } from '../../../lib/eventHandlers/taskHandler'
+import { IssueHandler } from '../../../lib/eventHandlers/issueHandler'
 import { handleWikiPageEvent } from '../../../lib/eventHandlers/wikiPageHandler'
-import { handleEpicEvent } from '../../../lib/eventHandlers/epicHandler'
+import { EpicHandler} from '../../../lib/eventHandlers/epicHandler'
 
 const COLORS = {
   CREATE: 0x00ff00,  // Green
@@ -27,13 +27,19 @@ const EMBED = {
   }
 }
 
+const epicHandler = new EpicHandler()
+const userStoryHandler = new UserStoryHandler()
+const taskHandler = new TaskHandler()
+const milestoneHandler = new MilestoneHandler()
+const issueHandler = new IssueHandler()
+
 const EVENT_HANDLERS = {
-  // 'milestone': handleMilestoneEvent,
-  'userstory': handleUserStoryEvent,
-  'task': handleTaskEvent,
-  'issue': handleIssueEvent,
+  'milestone': milestoneHandler.handleEvent.bind(milestoneHandler),
+  'userstory': userStoryHandler.handleEvent.bind(userStoryHandler),
+  'task': taskHandler.handleEvent.bind(taskHandler),
+  'issue': issueHandler.handleEvent.bind(issueHandler),
   'wikipage': handleWikiPageEvent,
-  'epic': handleEpicEvent
+  'epic': epicHandler.handleEvent.bind(epicHandler)
 }
 
 function verifySignature(key: string, rawBody: Buffer, signature: string): boolean {
@@ -94,6 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const eventType = body.type.toLowerCase()
+    let actionType = body.action.toLowerCase()
     const projectId = body.data.project?.id?.toString() || body.data.project?.toString()
 
     if (!projectId) {
@@ -112,9 +119,16 @@ export async function POST(request: NextRequest) {
 
     // Generate Discord embed
     const embed = handler(body)
+
+    // If the event is a new comment, we can treat the action as 'create'
+    // This allows for more granular webhook control in the future.
+    if (embed?.title?.startsWith('New comment on')) {
+      // Currently, Taiga sends 'change' for comments. We can override it here.
+      actionType = 'create'
+    }
     
     // Send to all relevant webhooks
-    const results = await webhookManager.sendWebhooks(projectId, eventType, embed)
+    const results = await webhookManager.sendWebhooks(projectId, eventType, actionType, embed)
     
     console.log(`[WEBHOOK] Sent ${eventType} event to ${results.length} webhooks for project ${projectId}`)
 

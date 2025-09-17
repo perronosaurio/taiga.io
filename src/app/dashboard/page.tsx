@@ -31,14 +31,18 @@ import {
   CircularProgress,
   AppBar,
   Toolbar,
-  Avatar
+  Avatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   Send as SendIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
 import TaigaIcon from '../../components/TaigaIcon'
 import { getWebhookUrl } from '../../lib/config'
@@ -53,7 +57,7 @@ interface Project {
 interface Webhook {
   id: string
   url: string
-  entities: string[]
+  entities: Record<string, string[]>
   createdAt: string
   lastTested: string | null
 }
@@ -71,6 +75,8 @@ const ENTITY_TYPES = {
   wikipage: '📚 Wiki Pages'
 }
 
+const ACTION_TYPES = ['create', 'change', 'delete']
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
@@ -81,7 +87,10 @@ export default function Dashboard() {
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null)
   const [webhookForm, setWebhookForm] = useState({
     url: '',
-    entities: Object.keys(ENTITY_TYPES)
+    entities: Object.keys(ENTITY_TYPES).reduce((acc, key) => {
+      acc[key] = [...ACTION_TYPES]
+      return acc
+    }, {} as Record<string, string[]>)
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -139,16 +148,31 @@ export default function Dashboard() {
 
   const openWebhookDialog = (webhook?: Webhook) => {
     if (webhook) {
+      // delete old format
+      const validEntityKeys = Object.keys(ENTITY_TYPES);
+      const cleanedEntities = Object.entries(webhook.entities)
+        .filter(([key, value]) => validEntityKeys.includes(key) && Array.isArray(value))
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, string[]>);
+
       setEditingWebhook(webhook)
       setWebhookForm({
         url: webhook.url,
-        entities: webhook.entities
+        entities: Object.keys(ENTITY_TYPES).reduce((acc, key) => {
+          acc[key] = cleanedEntities[key] || [];
+          return acc;
+        }, {} as Record<string, string[]>)
       })
     } else {
       setEditingWebhook(null)
       setWebhookForm({
         url: '',
-        entities: Object.keys(ENTITY_TYPES)
+        entities: Object.keys(ENTITY_TYPES).reduce((acc, key) => {
+          acc[key] = [...ACTION_TYPES]
+          return acc
+        }, {} as Record<string, string[]>)
       })
     }
     setWebhookDialogOpen(true)
@@ -165,7 +189,9 @@ export default function Dashboard() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(webhookForm),
+        body: JSON.stringify({
+          ...webhookForm
+        }),
         credentials: 'include'
       })
 
@@ -347,7 +373,7 @@ export default function Dashboard() {
                                 Discord Webhook
                               </Typography>
                               <Chip 
-                                label={webhook.entities.length} 
+                                label={`${Object.values(webhook.entities || {}).filter(v => v.length > 0).length} entities`} 
                                 size="small" 
                                 color="primary" 
                               />
@@ -359,14 +385,16 @@ export default function Dashboard() {
                                 {webhook.url}
                               </Typography>
                               <Box display="flex" gap={0.5} mt={1} flexWrap="wrap">
-                                {Array.isArray(webhook.entities) && webhook.entities.map((entity) => (
-                                  <Chip
-                                    key={entity}
-                                    label={ENTITY_TYPES[entity as keyof typeof ENTITY_TYPES]}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                ))}
+                                {Object.entries(webhook.entities || {})
+                                  .filter(([, actions]) => actions.length > 0)
+                                  .map(([entity]) => (
+                                    <Chip
+                                      key={entity}
+                                      label={ENTITY_TYPES[entity as keyof typeof ENTITY_TYPES]}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  ))}
                               </Box>
                             </Box>
                           }
@@ -428,23 +456,48 @@ export default function Dashboard() {
           </Typography>
           
           {Object.entries(ENTITY_TYPES).map(([key, label]) => (
-            <FormControlLabel
-              key={key}
-              control={
-                <Checkbox
-                  checked={Array.isArray(webhookForm.entities) && webhookForm.entities.includes(key)}
-                  onChange={(e) => {
-                    const currentEntities = Array.isArray(webhookForm.entities) ? webhookForm.entities : [];
-                    const newEntities = e.target.checked
-                      ? [...currentEntities, key]
-                      : currentEntities.filter(entity => entity !== key);
-                    
-                    setWebhookForm(prev => ({ ...prev, entities: newEntities }));
-                  }}
+            <Accordion key={key} defaultExpanded>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <FormControlLabel
+                  label={label}
+                  control={
+                    <Checkbox
+                      checked={(webhookForm.entities[key] || []).length === ACTION_TYPES.length}
+                      indeterminate={(webhookForm.entities[key] || []).length > 0 && (webhookForm.entities[key] || []).length < ACTION_TYPES.length}
+                      onChange={(e) => {
+                        const newEntities = { ...webhookForm.entities };
+                        newEntities[key] = e.target.checked ? [...ACTION_TYPES] : [];
+                        setWebhookForm(prev => ({ ...prev, entities: newEntities }));
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  }
                 />
-              }
-              label={label}
-            />
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', ml: 3 }}>
+                {ACTION_TYPES.map(action => (
+                  <FormControlLabel
+                    key={action}
+                    label={action.charAt(0).toUpperCase() + action.slice(1)}
+                    control={
+                      <Checkbox
+                        checked={(webhookForm.entities[key] || []).includes(action)}
+                        onChange={(e) => {
+                          const currentActions = webhookForm.entities[key] || [];
+                          let newActions;
+                          if (e.target.checked) {
+                            newActions = [...currentActions, action];
+                          } else {
+                            newActions = currentActions.filter(a => a !== action);
+                          }
+                          setWebhookForm(prev => ({ ...prev, entities: { ...prev.entities, [key]: newActions } }));
+                        }}
+                      />
+                    }
+                  />
+                ))}
+              </AccordionDetails>
+            </Accordion>
           ))}
         </DialogContent>
         <DialogActions>
@@ -454,7 +507,7 @@ export default function Dashboard() {
           <Button 
             onClick={handleWebhookSubmit} 
             variant="contained"
-            disabled={!webhookForm.url || webhookForm.entities.length === 0}
+            disabled={!webhookForm.url || Object.values(webhookForm.entities).every(actions => actions.length === 0)}
           >
             {editingWebhook ? 'Update' : 'Add'}
           </Button>

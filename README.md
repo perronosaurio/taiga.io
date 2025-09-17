@@ -1,5 +1,7 @@
 # Taiga Webhook Manager
 
+![img](./docs/asset/img.png)
+
 A modern Next.js application for managing Discord webhooks for your Taiga projects. This application allows project owners to configure multiple Discord channels for different types of Taiga events.
 
 ## Features
@@ -31,24 +33,29 @@ A modern Next.js application for managing Discord webhooks for your Taiga projec
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
-   cd taiga-webhook-manager
+   cd taiga.io
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
+   > you might need `make` pacakge.
+
 3. **Set up environment variables**
+
    Create a `.env.local` file in the root directory:
    ```env
    # Base URL for the application (used for webhook URLs)
-   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   # NEXT_PUBLIC_BASE_URL=http://localhost:3000
    
    # For production, change to your actual domain
-   # NEXT_PUBLIC_BASE_URL=https://your-domain.com
+   NEXT_PUBLIC_BASE_URL=https://your-domain.com
 
    # Default Taiga instance URL for login form
    NEXT_PUBLIC_TAIGA_DEFAULT_URL=https://api.taiga.io
@@ -57,30 +64,44 @@ A modern Next.js application for managing Discord webhooks for your Taiga projec
    TAIGA_WEBHOOK_SECRET=your-very-secret-key
    ```
 
+   > Please note that Taiga does **not support IP addresses** (e.g., localhost:3000) for input. You must use a domain.
+
 4. **Run the development server**
+
    ```bash
    npm run dev
    ```
 
 5. **Access the application**
+
    Open [http://localhost:3000](http://localhost:3000) in your browser
+
+   > Open https://your-domain.com
 
 ## Usage
 
 ### 1. Login
+
 - Enter your Taiga URL, username, and password
 - Only project owners will be able to access the system
 
 ### 2. Select Project
+
 - Choose from your owned projects in the dropdown
 
 ### 3. Manage Webhooks
+
+![settings_web](./docs/asset/setting_web.png)
+
 - **Add Webhook**: Click "Add Webhook" and enter Discord webhook URL
 - **Configure Events**: Select which event types to send to each webhook
 - **Test Webhook**: Use the test button to verify webhook functionality
 - **Edit/Delete**: Modify or remove webhooks as needed
 
 ### 4. Configure Taiga Webhook
+
+![settings taiga](./docs/asset/setting_taiga.png)
+
 In your Taiga project settings, configure a webhook to point to:
 ```
 ${NEXT_PUBLIC_BASE_URL}/api/webhook
